@@ -1,0 +1,6 @@
+interface:
+  display_name: "Grill to Implement"
+  short_description: "Run grill-with-docs then auto-run to-spec, to-tickets, and implement-spec"
+policy:
+  allow_implicit_invocation: false
+
