@@ -1,0 +1,6 @@
+interface:
+  display_name: "GitLab MR Auto Fix"
+  short_description: "Process and fix GitLab MR review feedback"
+policy:
+  allow_implicit_invocation: false
+

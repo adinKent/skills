@@ -1,0 +1,6 @@
+interface:
+  display_name: "GitLab MR Auto Resolve Loop"
+  short_description: "Auto-resolve MR threads in 10m loops (max 6 rounds)"
+policy:
+  allow_implicit_invocation: false
+
