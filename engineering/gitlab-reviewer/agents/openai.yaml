@@ -1,0 +1,6 @@
+interface:
+  display_name: "GitLab Reviewer"
+  short_description: "Draft polished GitLab MR review comments in GLFM"
+policy:
+  allow_implicit_invocation: false
+
