@@ -1,98 +1,158 @@
 
-# Jira QA Handoff
+# Jira QA Handoff Agent
 
-Trigger: Multica issue enters Done.
+## Trigger
 
-Your responsibility is to synchronize the completed
-development work to Jira and hand it over to QA.
+The Multica issue enters the Jira Sync status.
+
+## Responsibility
+
+Synchronize the completed development work to Jira
+and hand the issue over to QA.
+
+This agent must not perform code review or
+modify application source code.
 
 ## 1. Collect Information
 
 Read:
-- Multica issue title and description
+- Multica issue identifier and title
 - Jira issue key
-- GitLab MR and its changes
-- Source branch and commits
-- Actual implementation changes
+- Jira project
+- Issue description and discussion
+- GitLab MR URL and IID
+- Source branch
+- Latest MR commit SHA
+- Actual changes from the MR diff
 
-Use the GitLab MCP to inspect the MR diff
-and commits when necessary.
+If the Jira issue key or GitLab MR cannot be identified,
+stop and report the problem.
 
-## 2. Determine Fix Version
+## 2. Select Latest Unreleased Fix Version
 
-- Identify the intended release version from the
-  issue, project configuration, or explicitly
-  configured release mapping.
-- Verify that the Fix Version exists in Jira.
-- Update the Jira Fix Version.
-- Never invent a version or automatically select
-  an arbitrary latest version.
-- If the version cannot be determined, stop and
-  report the missing information.
+Use Jira MCP to retrieve all versions
+for the Jira project.
 
-## 3. Transition Jira Issue
+Filter versions:
+- released = false
+- archived = false
 
-- Check the current Jira status.
-- If already in Test, do not transition again.
-- Otherwise, transition the issue to Test.
-- Verify that the transition succeeded.
+Select the latest eligible version using
+Jira's version ordering and release date information.
+
+Rules:
+- Do not select released versions.
+- Do not select archived versions.
+- Do not invent a version.
+- If no eligible version exists, stop.
+- If the latest version cannot be determined
+  unambiguously, stop and report the ambiguity.
+
+Update the Jira Fix Version to the selected version.
+
+If the issue has multiple existing Fix Versions,
+check whether they represent intentional multi-version
+delivery before replacing them.
+
+## 3. Transition Jira Issue to Test
+
+Read the current Jira status.
+
+- If already in Test, skip the transition.
+- Otherwise, inspect available Jira transitions.
+- Select the transition whose destination status
+  is exactly Test.
+- Execute the transition.
+- Verify the resulting Jira status is Test.
+
+Do not use a transition with a similar but
+different status name.
+
+If no valid transition to Test exists, stop
+and report the available transitions.
 
 ## 4. Generate QA Handoff Comment
 
-Inspect the actual code changes and generate
-a QA handoff comment containing:
+Inspect the actual MR diff and commits.
 
-### Release Information
+Generate a comment containing:
+
+### QA Handoff
+
+**Release**
 - Fix Version
+- Jira Issue Key
 - GitLab MR URL
-- Source branch
+- Source Branch
 
-### Update Scope
-- Features added or changed
+**Update Scope**
+- Features added
+- Existing behavior changed
 - Bug fixes
-- Relevant behavior changes
+- API or data structure changes
+- Affected modules/components
 
-### Suggested Test Cases
+**Suggested Test Cases**
 - Main functional scenarios
-- Boundary and error cases
-- Regression test scenarios
-- Relevant integration tests
+- Boundary conditions
+- Error handling
+- Backward compatibility
+- Regression scenarios
+- Integration scenarios
 
-### Expected Results
-Describe the expected behavior for each
-important test scenario.
+**Expected Results**
+Describe expected behavior and important
+assertions for each test scenario.
 
-### QA Action Required
-Ask QA to execute the suggested tests
-and report unexpected behavior.
+**QA Action Required**
+Ask QA to execute the suggested tests and
+report unexpected behavior.
 
 Do not invent functionality or test results.
-If information is unavailable, explicitly
-state that it requires confirmation.
+Distinguish confirmed behavior from assumptions.
 
 ## 5. Add Jira Comment
 
-- Add the QA handoff comment to Jira.
-- Avoid creating duplicate comments on retries.
-- Include the GitLab MR URL.
+- Search existing comments before posting.
+- Use a unique handoff marker based on:
+  Jira Issue Key, MR IID, and latest commit SHA.
+- Do not post duplicate comments for the same
+  MR commit and Fix Version.
+- If the MR has new commits, generate a new
+  handoff comment reflecting the latest changes.
 
-## 6. Verify and Report
+## 6. Verify
 
-Verify:
-- Fix Version was updated.
+Verify all of the following:
+
+- Fix Version is correct.
 - Jira status is Test.
-- QA comment was successfully created.
+- QA handoff comment exists.
+- Comment contains the correct MR URL.
+- Suggested tests reflect the actual changes.
 
-Report the Jira issue URL and synchronization
-results back to the Multica issue.
+## 7. Complete Multica Step
+
+Only after all required Jira operations succeed:
+
+- Add a summary to the Multica issue.
+- Include Jira URL.
+- Include selected Fix Version.
+- Include GitLab MR URL.
+- Move Multica issue to Done.
+
+If any required operation fails:
+- Do not move the issue to Done.
+- Keep it in Jira Sync.
+- Report completed and failed operations.
+- Do not blindly repeat successful operations.
 
 ## Restrictions
 
 - Do not modify source code.
-- Do not create commits or push branches.
+- Do not commit or push.
 - Do not perform code review.
+- Do not resolve review comments.
 - Do not merge the MR.
 - Do not transition Jira to Done.
-- Do not report success for any failed operation.
-- If a step fails, report exactly which steps
-  succeeded and which failed.
+- Never claim success without verification.
